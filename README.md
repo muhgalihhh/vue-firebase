@@ -11,23 +11,17 @@
   </tr>
 </table>
 
-
-## Bukti Dokumentasi Program :
-<img src="https://github.com/user-attachments/assets/0b090f70-de14-4616-ab7e-2e0a678b86ff" style="width: 150px;">
-<img src="https://github.com/user-attachments/assets/26766bf6-2d02-4a24-bcb7-081b53f7d5d7" style="width: 150px;">
-
-
-Berikut penjelasan alur dari proses login hingga data pengguna dapat ditampilkan pada halaman **Profile**:
+Berikut adalah penjelasan lengkap dari **awal login hingga data pengguna dapat ditampilkan di halaman profil**, termasuk peran file **`utils/firebase.ts`**.
 
 ---
 
-## **1. Proses Login**
+## **1. Proses Login dengan Google**
 
 ### **a. Klik Tombol Login**
-- Pengguna menekan tombol **Sign In with Google** pada halaman login.
-- Fungsi `loginWithGoogle` dari store autentikasi (`auth.ts`) dipanggil.
+- Pada halaman login, pengguna menekan tombol **Sign In with Google**.
+- Fungsi `loginWithGoogle` dari **Pinia Store (`auth.ts`)** dipanggil untuk memulai proses autentikasi.
 
-#### **Kode:**
+#### **Kode yang relevan:**
 ```html
 <ion-button @click="login" color="light">
   <ion-icon slot="start" :icon="logoGoogle"></ion-icon>
@@ -43,9 +37,11 @@ const login = async () => {
 
 ---
 
-### **b. Autentikasi Google**
-- Aplikasi menginisialisasi Google Authentication dengan `GoogleAuth.initialize`.
-- Pengguna melakukan login via Google, dan ID token dikembalikan.
+### **b. Inisialisasi GoogleAuth**
+- Aplikasi menginisialisasi GoogleAuth menggunakan **clientId** dari Google Cloud Console.
+- Login dilakukan melalui Google dengan cakupan data tertentu (misalnya: email, profil).
+
+#### **Kode di Store:**
 ```ts
 await GoogleAuth.initialize({
   clientId: '490957249666-12aai8m9h4rl98b4mp3lrfpq2oq8fi62.apps.googleusercontent.com',
@@ -54,16 +50,22 @@ await GoogleAuth.initialize({
 });
 
 const googleUser = await GoogleAuth.signIn();
+```
+
+- Setelah login, **ID Token** pengguna dikembalikan oleh Google.
+```ts
 const idToken = googleUser.authentication.idToken;
 ```
 
 ---
 
-### **c. Verifikasi Firebase**
-- Token dari Google diverifikasi oleh Firebase melalui `signInWithCredential`.
-- Firebase mengembalikan informasi pengguna (`user`), yang disimpan dalam state aplikasi.
+### **c. Verifikasi dengan Firebase**
+1. **Menggunakan Firebase Auth (`utils/firebase.ts`)**:
+   - Firebase mengonfirmasi keabsahan ID Token menggunakan **GoogleAuthProvider**.
+   - `signInWithCredential` digunakan untuk mencocokkan ID Token dan mengautentikasi pengguna di Firebase.
+   - Firebase kemudian mengembalikan informasi pengguna yang berhasil login.
 
-#### **Kode:**
+#### **Kode di Store:**
 ```ts
 const credential = GoogleAuthProvider.credential(idToken);
 const result = await signInWithCredential(auth, credential);
@@ -72,19 +74,53 @@ user.value = result.user;
 
 ---
 
-### **d. Navigasi ke Halaman Home**
-- Jika login berhasil, pengguna diarahkan ke halaman `/home`.
-```ts
-router.push('/home');
-```
+## **2. Peran `utils/firebase.ts`**
+
+### **Fungsi Utama File `utils/firebase.ts`**
+File ini bertugas untuk:
+1. **Inisialisasi Firebase**:
+   Menggunakan konfigurasi proyek dari Firebase Console untuk menghubungkan aplikasi ke Firebase.
+2. **Menyediakan Instance**:
+   - `auth`: Untuk autentikasi pengguna.
+   - `googleProvider`: Untuk login dengan Google.
 
 ---
 
-## **2. Sinkronisasi Status Pengguna**
+### **Kode `utils/firebase.ts`**
 
-### **a. Pemantauan Status Login**
-- Firebase memantau status autentikasi melalui `onAuthStateChanged`.
-- Ketika status login berubah (misalnya login berhasil), informasi pengguna disimpan ke variabel `user` di **Pinia Store**.
+```ts
+import { initializeApp } from 'firebase/app';
+import { getAuth, GoogleAuthProvider } from 'firebase/auth';
+
+// Konfigurasi Firebase dari .env
+const firebaseConfig = {
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
+};
+
+// Inisialisasi aplikasi Firebase
+const firebase = initializeApp(firebaseConfig);
+const auth = getAuth(firebase);
+const googleProvider = new GoogleAuthProvider();
+
+export { auth, googleProvider };
+```
+
+### **Detail Kode:**
+1. **`initializeApp`**: Memulai koneksi ke Firebase.
+2. **`getAuth`**: Menginisialisasi autentikasi Firebase.
+3. **`GoogleAuthProvider`**: Menyediakan metode autentikasi Google.
+
+---
+
+## **3. Sinkronisasi Status Login**
+Firebase memantau status pengguna menggunakan **`onAuthStateChanged`**.  
+Saat status pengguna berubah (login/logout), data pengguna otomatis diperbarui di state aplikasi.
 
 #### **Kode:**
 ```ts
@@ -95,22 +131,27 @@ onAuthStateChanged(auth, (currentUser) => {
 
 ---
 
-## **3. Routing ke Halaman Profile**
-### **a. Proteksi Halaman**
-- Halaman **Profile** membutuhkan autentikasi. Jika pengguna mencoba mengakses tanpa login, mereka akan diarahkan ke halaman login (`/login`).
+## **4. Routing ke Halaman Profile**
+
+### **Proteksi Halaman**
+- Halaman profil membutuhkan autentikasi (`meta.isAuth: true`).
+- Jika pengguna belum login, mereka diarahkan ke halaman login.
 
 #### **Kode Router:**
 ```ts
 if (to.meta.isAuth && !authStore.isAuth) {
   next('/login');
+} else {
+  next();
 }
 ```
 
 ---
 
-## **4. Penampilan Data Pengguna**
-### **a. Data di Store**
-- State `user` di **Pinia Store** menyimpan informasi pengguna yang berhasil login, seperti:
+## **5. Penampilan Data di Halaman Profile**
+
+### **a. Data Pengguna di Store**
+- Data pengguna (`user`) yang berhasil login disimpan di **Pinia Store**:
   - `displayName`: Nama pengguna.
   - `email`: Email pengguna.
   - `photoURL`: URL foto profil pengguna.
@@ -123,25 +164,13 @@ const isAuth = computed(() => user.value !== null);
 
 ---
 
-### **b. Mengambil Data di Halaman Profile**
-- Halaman **Profile** mengakses state `user` melalui **Pinia Store** dengan `computed`.
-- Jika pengguna belum memiliki foto profil, digunakan foto default.
+### **b. Komponen Halaman Profile**
+1. **Avatar dan Data Profil**:
+   - Avatar pengguna ditampilkan menggunakan URL dari `photoURL`.
+   - Data profil (nama, email) diambil dari state `user` dan ditampilkan menggunakan **IonInput** dengan properti `readonly`.
 
-#### **Kode:**
-```ts
-const user = computed(() => authStore.user);
-const userPhoto = ref(user.value?.photoURL || 'https://ionicframework.com/docs/img/demos/avatar.svg');
-
-function handleImageError() {
-  userPhoto.value = 'https://ionicframework.com/docs/img/demos/avatar.svg';
-}
-```
-
----
-
-### **c. Menampilkan Data di UI**
-- Informasi pengguna (nama dan email) ditampilkan menggunakan elemen **IonInput** dengan properti `readonly`.
-- Foto profil ditampilkan menggunakan **IonAvatar**, dan jika gagal memuat, foto default digunakan.
+2. **Handle Gambar Error**:
+   - Jika URL gambar pengguna tidak valid, digunakan gambar default.
 
 #### **Kode UI:**
 ```html
@@ -164,10 +193,25 @@ function handleImageError() {
 </ion-list>
 ```
 
+#### **Script di Halaman Profile:**
+```ts
+const user = computed(() => authStore.user);
+const userPhoto = ref(user.value?.photoURL || 'https://ionicframework.com/docs/img/demos/avatar.svg');
+
+function handleImageError() {
+  userPhoto.value = 'https://ionicframework.com/docs/img/demos/avatar.svg';
+}
+```
+
 ---
 
-## **Ringkasan Alur**
-1. **Login**: Pengguna login melalui Google, dan Firebase memverifikasi kredensial.
-2. **Store**: Data pengguna disimpan di state aplikasi menggunakan **Pinia Store**.
-3. **Routing**: Pengguna diarahkan ke halaman yang relevan (contoh: `/profile`).
-4. **Display**: Halaman **Profile** menampilkan data pengguna (nama, email, foto profil) yang diambil dari store.
+## **6. Ringkasan Alur**
+1. **Login**:
+   - Pengguna login melalui Google, ID Token diverifikasi oleh Firebase.
+   - Data pengguna disimpan di state aplikasi (**Pinia Store**).
+2. **Sinkronisasi**:
+   - Firebase memantau status login pengguna, memperbarui state `user` secara otomatis.
+3. **Routing**:
+   - Halaman profil dicek autentikasi (hanya dapat diakses jika login).
+4. **Tampilan Profil**:
+   - Data pengguna (nama, email, foto) diambil dari state dan ditampilkan di halaman **Profile**. Jika ada masalah dengan foto, gambar default digunakan.

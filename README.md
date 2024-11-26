@@ -11,10 +11,7 @@
   </tr>
 </table>
 
-## Daftar isi
-- [ScreenShot](#Screenshot)
-- [Proses Login](#login)
-- [CRUD TODOS](#crud)
+
 
 ## ScreenShot
 <div id="#Screenshot"></div>

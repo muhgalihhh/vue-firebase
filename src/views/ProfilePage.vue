@@ -30,51 +30,28 @@
           <ion-input label="Email" :value="user?.email" :readonly="true"></ion-input>
         </ion-item>
       </ion-list>
-
-      <!-- Tabs Menu -->
-      <TabsMenu />
     </ion-content>
   </ion-page>
 </template>
+
 <script setup lang="ts">
-import TabsMenu from '@/components/TabsMenu.vue';
 import { useAuthStore } from '@/stores/auth';
 import { IonAvatar, IonButton, IonContent, IonHeader, IonIcon, IonInput, IonItem, IonLabel, IonList, IonPage, IonTitle, IonToolbar } from '@ionic/vue';
 import { exit } from 'ionicons/icons';
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, ref } from 'vue';
 
-// Import Auth Store
 const authStore = useAuthStore();
 const user = computed(() => authStore.user);
 
-// Logout Function
 const logout = () => {
   authStore.logout();
 };
 
-// Default Avatar and User Photo
-const userPhoto = ref('https://ionicframework.com/docs/img/demos/avatar.svg');
+const userPhoto = ref(user.value?.photoURL || 'https://ionicframework.com/docs/img/demos/avatar.svg');
 
-// Watch for Changes in User Data
-watch(user, (newValue) => {
-  if (newValue?.photoURL) {
-    userPhoto.value = `${newValue.photoURL}?t=${Date.now()}`; // Prevent caching issues
-    console.log('Updated user photo URL:', userPhoto.value);
-  }
-});
-
-// Handle Image Load Errors
-function handleImageError(event: Event) {
-  console.error('Image load error:', event);
+function handleImageError() {
   userPhoto.value = 'https://ionicframework.com/docs/img/demos/avatar.svg';
 }
-
-// Ensure Data Loads Correctly on Component Mount
-onMounted(() => {
-  if (user.value?.photoURL) {
-    userPhoto.value = `${user.value.photoURL}?t=${Date.now()}`; // Prevent caching issues
-  }
-});
 </script>
 
 <style scoped>

@@ -14,9 +14,9 @@
 ## Daftar isi
 - [ScreenShot](#Screenshot)
 - [Proses Login](#login)
-- [CRUD TODOS](#crud)
+- [CRUD TODOS](#Crud Todos)
 
-## <a href="#Screenshot'>ScreenShot</a>
+## ScreenShot
 ### Profile
 <img src="https://github.com/user-attachments/assets/0b090f70-de14-4616-ab7e-2e0a678b86ff" style="width: 150px; ">
 <img src="https://github.com/user-attachments/assets/26766bf6-2d02-4a24-bcb7-081b53f7d5d7" style="width: 150px; ">
@@ -240,7 +240,7 @@ function handleImageError() {
   
 
 
-## <a href="#crud'>CRUD Todos</a>
+## CRUD Todos
 
 ### 1. **Create (Tambah Data)**
    - **Mekanisme:**  

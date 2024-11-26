@@ -32,14 +32,6 @@
 
 
 
-
-
-
-
-
-
-
-
 ## **1. Proses Login dengan Google**
 
 ### **a. Klik Tombol Login**
@@ -243,7 +235,7 @@ function handleImageError() {
   
 
 
-## CRUD 
+## CRUD Todos
 
 ### 1. **Create (Tambah Data)**
    - **Mekanisme:**  

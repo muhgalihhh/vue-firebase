@@ -17,7 +17,7 @@
 - [CRUD TODOS](#crud)
 
 ## ScreenShot
-<a name="#Screenshot"></a>
+<div id="#Screenshot"></div>
 ### Profile SS
 <img src="https://github.com/user-attachments/assets/0b090f70-de14-4616-ab7e-2e0a678b86ff" style="width: 150px; ">
 <img src="https://github.com/user-attachments/assets/26766bf6-2d02-4a24-bcb7-081b53f7d5d7" style="width: 150px; ">
@@ -37,7 +37,7 @@
 <img src="https://github.com/user-attachments/assets/b5c3469f-f9ba-48a1-b6dd-fc562e02759f" style="width: 150px; ">
 
 ## Proses Login
-<a name="#login"></a>
+<div id="#login"></div>
 
 ## **1. Proses Login dengan Google**
 
@@ -243,7 +243,7 @@ function handleImageError() {
 
 
 ## CRUD Todos
-<a name="#crud"></a>
+<div id="#crud"></div>
 
 ### 1. **Create (Tambah Data)**
    - **Mekanisme:**  

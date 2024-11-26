@@ -22,6 +22,19 @@
 <img src="https://github.com/user-attachments/assets/5c80bf29-a273-4f16-a803-26ab01a92ea7" style="width: 150px; ">
 <img src="https://github.com/user-attachments/assets/4df7617e-1bb3-4c29-8b17-5023a4547572" style="width: 150px; ">
 <img src="https://github.com/user-attachments/assets/c3b5c9bb-4dc4-4d23-bcc2-c1122e8c7bea" style="width: 150px; ">
+<br>
+<img src="https://github.com/user-attachments/assets/3c74a99c-c77c-4ed0-9d3a-68c01a72aa4c" style="width: 150px; ">
+<img src="https://github.com/user-attachments/assets/79d5ba70-d417-45f6-a655-d9048988d58e" style="width: 150px; ">
+<img src="https://github.com/user-attachments/assets/9ee5ec20-b99a-445d-823e-478a72314ad9" style="width: 150px; ">
+<img src="https://github.com/user-attachments/assets/1f9b13af-01a7-44db-acbf-b3091f7b1ccc" style="width: 150px; ">
+<img src="https://github.com/user-attachments/assets/9c6645e5-3fde-45fb-98b0-01ac54402443" style="width: 150px; ">
+<img src="https://github.com/user-attachments/assets/b5c3469f-f9ba-48a1-b6dd-fc562e02759f" style="width: 150px; ">
+
+
+
+
+
+
 
 
 
@@ -227,3 +240,242 @@ function handleImageError() {
    - Halaman profil dicek autentikasi (hanya dapat diakses jika login).
 4. **Tampilan Profil**:
    - Data pengguna (nama, email, foto) diambil dari state dan ditampilkan di halaman **Profile**. Jika ada masalah dengan foto, gambar default digunakan.
+  
+
+
+## CRUD 
+
+### 1. **Create (Tambah Data)**
+   - **Mekanisme:**  
+     Pengguna menekan tombol "Add Todo" (ikon `add` pada `ion-fab-button`), lalu modal `InputModal` akan terbuka. Pengguna mengisi judul dan deskripsi, lalu menekan tombol "Add Todo" dalam modal.
+
+   - **Kode yang terlibat:**
+     - **Membuka Modal:**
+       ```vue
+       <ion-fab-button @click="isOpen = true">
+         <ion-icon :icon="add" size="large"></ion-icon>
+       </ion-fab-button>
+       ```
+       ```vue
+       <InputModal v-model:isOpen="isOpen" v-model:editingId="editingId" :todo="todo" @submit="handleSubmit" />
+       ```
+     - **Mengirimkan Data ke Firestore:**
+       ```ts
+       const handleSubmit = async (todo: Omit<Todo, 'id' | 'createdAt' | 'updatedAt' | 'status'>) => {
+         if (!todo.title) {
+           await showToast('Title is required', 'warning', warningOutline);
+           return;
+         }
+         try {
+           if (editingId.value) {
+             await firestoreService.updateTodo(editingId.value, todo as Todo);
+             await showToast('Todo updated successfully', 'success', checkmarkCircle);
+           } else {
+             await firestoreService.addTodo(todo as Todo);
+             await showToast('Todo added successfully', 'success', checkmarkCircle);
+           }
+           loadTodos();
+         } catch (error) {
+           await showToast('An error occurred', 'danger', closeCircle);
+           console.error(error);
+         } finally {
+           editingId.value = null;
+         }
+       };
+       ```
+     - **Fungsi `addTodo` pada Firestore:**
+       ```ts
+       async addTodo(todo: Omit<Todo, 'id'>) {
+         try {
+           const todoRef = this.getTodoRef();
+           const docRef = await addDoc(todoRef, {
+             ...todo,
+             status: false,
+             createdAt: Timestamp.now(),
+             updatedAt: Timestamp.now(),
+           });
+           return docRef.id;
+         } catch (error) {
+           console.error('Error Tambah Todo:', error);
+           throw error;
+         }
+       }
+       ```
+
+---
+
+### 2. **Read (Membaca Data)**
+   - **Mekanisme:**  
+     Data todos dimuat dari Firestore setiap kali halaman diakses atau di-refresh.
+
+   - **Kode yang terlibat:**
+     - **Fungsi untuk Memuat Todos:**
+       ```ts
+       const loadTodos = async (isLoading = true) => {
+         let loading;
+         if (isLoading) {
+           loading = await loadingController.create({
+             message: 'Loading...',
+           });
+           await loading.present();
+         }
+
+         try {
+           todos.value = await firestoreService.getTodos();
+         } catch (error) {
+           console.error(error);
+         } finally {
+           if (loading) {
+             await loading.dismiss();
+           }
+         }
+       };
+       ```
+     - **Fungsi `getTodos` pada Firestore:**
+       ```ts
+       async getTodos(): Promise<Todo[]> {
+         try {
+           const todoRef = this.getTodoRef();
+           const q = query(todoRef, orderBy('updatedAt', 'desc'));
+           const snapshot = await getDocs(q);
+           return snapshot.docs.map(
+             (doc) =>
+               ({
+                 id: doc.id,
+                 ...doc.data(),
+               } as Todo)
+           );
+         } catch (error) {
+           console.error('Error Get Todos:', error);
+           throw error;
+         }
+       }
+       ```
+     - **Pemanggilan `loadTodos` saat halaman dimuat:**
+       ```ts
+       onMounted(() => {
+         loadTodos();
+         intervalId = setInterval(() => {
+           timeUpdateTrigger.value++;
+         }, 60000);
+       });
+       ```
+
+---
+
+### 3. **Update (Memperbarui Data)**
+   - **Mekanisme:**  
+     Pengguna dapat menekan tombol edit (ikon `create`) untuk membuka modal `InputModal` dengan data todo yang sudah ada. Setelah mengedit data, tombol "Edit Todo" dalam modal akan menyimpan perubahan.
+
+   - **Kode yang terlibat:**
+     - **Menampilkan Modal dengan Data Lama:**
+       ```ts
+       const handleEdit = async (editTodo: Todo) => {
+         const slidingItem = itemRefs.value.get(editTodo.id!);
+         await slidingItem?.close();
+
+         editingId.value = editTodo.id!;
+         todo.value = {
+           title: editTodo.title,
+           description: editTodo.description,
+         };
+         isOpen.value = true;
+       };
+       ```
+     - **Mengupdate Data di Firestore:**
+       ```ts
+       const handleSubmit = async (todo: Omit<Todo, 'id' | 'createdAt' | 'updatedAt' | 'status'>) => {
+         if (editingId.value) {
+           await firestoreService.updateTodo(editingId.value, todo as Todo);
+           await showToast('Todo updated successfully', 'success', checkmarkCircle);
+         }
+       };
+       ```
+     - **Fungsi `updateTodo` pada Firestore:**
+       ```ts
+       async updateTodo(id: string, todo: Partial<Todo>) {
+         try {
+           const todoRef = this.getTodoRef();
+           const docRef = doc(todoRef, id);
+           await updateDoc(docRef, {
+             ...todo,
+             updatedAt: Timestamp.now(),
+           });
+         } catch (error) {
+           console.error('Error Update Todo:', error);
+           throw error;
+         }
+       }
+       ```
+
+---
+
+### 4. **Delete (Menghapus Data)**
+   - **Mekanisme:**  
+     Pengguna dapat menghapus todo dengan menggeser ke kiri atau menekan tombol hapus (ikon `trash`).
+
+   - **Kode yang terlibat:**
+     - **Handle Swipe atau Klik Tombol Hapus:**
+       ```ts
+       const handleDelete = async (deleteTodo: Todo) => {
+         try {
+           await firestoreService.deleteTodo(deleteTodo.id!);
+           await showToast('Todo deleted successfully', 'success', checkmarkCircle);
+           loadTodos();
+         } catch (error) {
+           await showToast('Failed to delete todo', 'danger', closeCircle);
+           console.error(error);
+         }
+       };
+       ```
+     - **Fungsi `deleteTodo` pada Firestore:**
+       ```ts
+       async deleteTodo(id: string) {
+         try {
+           const todoRef = this.getTodoRef();
+           const docRef = doc(todoRef, id);
+           await deleteDoc(docRef);
+         } catch (error) {
+           console.error('Error Delete Todo:', error);
+           throw error;
+         }
+       }
+       ```
+
+---
+
+### 5. **Update Status (Aktif/Completed)**
+   - **Mekanisme:**  
+     Pengguna dapat menggeser ke kanan atau menekan tombol untuk menandai todo sebagai aktif atau selesai.
+
+   - **Kode yang terlibat:**
+     - **Handle Swipe atau Klik Tombol Status:**
+       ```ts
+       const handleStatus = async (statusTodo: Todo) => {
+         const slidingItem = itemRefs.value.get(statusTodo.id!);
+         await slidingItem?.close();
+         try {
+           await firestoreService.updateStatus(statusTodo.id!, !statusTodo.status);
+           await showToast(`Todo marked as ${!statusTodo.status ? 'completed' : 'active'}`, 'success', checkmarkCircle);
+           loadTodos();
+         } catch (error) {
+           await showToast('Failed to update status', 'danger', closeCircle);
+           console.error(error);
+         }
+       };
+       ```
+     - **Fungsi `updateStatus` pada Firestore:**
+       ```ts
+       async updateStatus(id: string, status: boolean) {
+         try {
+           const todoRef = this.getTodoRef();
+           const docRef = doc(todoRef, id);
+           await updateDoc(docRef, { status: status, updatedAt: Timestamp.now() });
+         } catch (error) {
+           console.error('Error Update Status:', error);
+           throw error;
+         }
+       }
+       ```
+
+

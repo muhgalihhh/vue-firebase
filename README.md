@@ -18,11 +18,11 @@
 
 ## ScreenShot
 <a name="#Screenshot"></a>
-### Profile
+### Profile SS
 <img src="https://github.com/user-attachments/assets/0b090f70-de14-4616-ab7e-2e0a678b86ff" style="width: 150px; ">
 <img src="https://github.com/user-attachments/assets/26766bf6-2d02-4a24-bcb7-081b53f7d5d7" style="width: 150px; ">
 
-### CRUD
+### CRUD SS
 <img src="https://github.com/user-attachments/assets/fc5751e7-b131-4679-a3a2-7f58d9a19f9c" style="width: 150px; ">
 <img src="https://github.com/user-attachments/assets/5a46bacc-aa3e-4006-9b7e-0e4a07a8b308" style="width: 150px; ">
 <img src="https://github.com/user-attachments/assets/5c80bf29-a273-4f16-a803-26ab01a92ea7" style="width: 150px; ">

@@ -11,7 +11,12 @@
   </tr>
 </table>
 
-## ScreenShot
+## Daftar isi
+- [ScreenShot](#Screenshot)
+- [Proses Login](#login)
+- [CRUD TODOS](#crud)
+
+## <a href="#Screenshot'>ScreenShot</a>
 ### Profile
 <img src="https://github.com/user-attachments/assets/0b090f70-de14-4616-ab7e-2e0a678b86ff" style="width: 150px; ">
 <img src="https://github.com/user-attachments/assets/26766bf6-2d02-4a24-bcb7-081b53f7d5d7" style="width: 150px; ">
@@ -30,7 +35,7 @@
 <img src="https://github.com/user-attachments/assets/9c6645e5-3fde-45fb-98b0-01ac54402443" style="width: 150px; ">
 <img src="https://github.com/user-attachments/assets/b5c3469f-f9ba-48a1-b6dd-fc562e02759f" style="width: 150px; ">
 
-
+## <a href="#login'>Proses Login</a>
 
 ## **1. Proses Login dengan Google**
 
@@ -235,7 +240,7 @@ function handleImageError() {
   
 
 
-## CRUD Todos
+## <a href="#crud'>CRUD Todos</a>
 
 ### 1. **Create (Tambah Data)**
    - **Mekanisme:**  
